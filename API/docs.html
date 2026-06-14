@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+    <title>Multibank 2.0 API Reference</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { margin: 0; height: 100vh; }
+        #app { height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script>
+        window.onload = function() {
+            const baseUrl = window.location.origin;
+            const specUrl = `http://tinify.net/mHO?t=${Date.now()}`;
+            
+            Scalar.createApiReference('#app', {
+                url: specUrl,
+                favicon: 'https://multibank.io/icons/favicon-32x32.png',
+                forceDarkModeState: 'dark',
+                layout: 'modern',
+                proxyUrl: 'https://proxy.scalar.com',
+                customCss: `
+                    #app { background-color: #0B1120; }
+                    body { background-color: #0B1120; color: #ffffff; }
+                    #app a { color: #FFB811; }
+                    #app a:hover { color: #e6a60f; }
+                    #app input:focus, #app textarea:focus, #app select:focus { border-color: #FFB811; outline: none; box-shadow: 0 0 0 2px rgba(255,184,17,.2); }
+                `,
+            });
+        };
+    </script>
+</body>
+</html>
