@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "MBIO 2.0 API",
+    "title": "Multibank CREST API",
     "version": "2.0.0",
-    "description": "MultiBank.io (MBIO 2.0) consolidated REST API. Generated from the MBIO 2.0 service contracts."
+    "description": "MultiBank CREST (Consolidated REST) API."
   },
   "servers": [
     {
@@ -79,14 +79,14 @@
     }
   ],
   "paths": {
-    "/api/v1/auth/signin": {
+    "/api/v1/auth/verify": {
       "post": {
         "tags": [
           "Authentication"
         ],
-        "summary": "Sign In",
-        "operationId": "authSignIn",
-        "description": "Single authentication service. Authenticates the user and returns a valid JWT.",
+        "summary": "Authentication Verify - SignIn / SignUp",
+        "operationId": "authVerify",
+        "description": "Single authentication service. Authenticates the user (password, passkeys, social or refresh token) and returns a valid JWT.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -266,14 +266,14 @@
         }
       }
     },
-    "/api/v1/auth/passkeys": {
+    "/api/v1/auth/challenge": {
       "get": {
         "tags": [
           "Authentication"
         ],
-        "summary": "Passkeys Challenge",
-        "operationId": "getPasskeysChallenge",
-        "description": "Get passkeys challenge for a given user.",
+        "summary": "Authentication Challenge",
+        "operationId": "getAuthChallenge",
+        "description": "Get the authentication challenge for a given user. The response shape depends on the user state: a passkey challenge when a passkey is found, a password credential when the user has a manual password set, or an empty credentials list when the user is not registered or has no password.",
         "security": [],
         "parameters": [
           {
@@ -287,7 +287,7 @@
             "description": "User email"
           },
           {
-            "name": "authentication",
+            "name": "method",
             "in": "query",
             "required": true,
             "schema": {
@@ -306,17 +306,40 @@
                 "schema": {
                   "$ref": "#/components/schemas/PasskeysChallengeResponse"
                 },
-                "example": {
-                  "challenge": "abc123",
-                  "rpId": "mb.io",
-                  "allowCredentials": [
-                    {
-                      "id": "base64url-credential-id",
-                      "type": "public-key"
+                "examples": {
+                  "passkey": {
+                    "summary": "Passkey found",
+                    "value": {
+                      "challenge": "abc123",
+                      "rpId": "mb.io",
+                      "allowCredentials": [
+                        {
+                          "id": "base64url-credential-id",
+                          "type": "public-key"
+                        }
+                      ],
+                      "timeout": 60,
+                      "userVerification": "preferred"
                     }
-                  ],
-                  "timeout": 60,
-                  "userVerification": "preferred"
+                  },
+                  "password": {
+                    "summary": "User has manual password set",
+                    "value": {
+                      "allowCredentials": [
+                        {
+                          "id": "abc123",
+                          "type": "password"
+                        }
+                      ]
+                    }
+                  },
+                  "unregistered": {
+                    "summary": "User not registered or has no password",
+                    "value": {
+                      "allowCredentials": [],
+                      "timeout": 60
+                    }
+                  }
                 }
               }
             }
@@ -496,6 +519,82 @@
                   "mfaType": "EMAIL",
                   "languageCode": "en",
                   "emailConfirmed": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/io/v1/user/profile": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "User Profile",
+        "operationId": "getUserProfile",
+        "description": "Returns the user profile data.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                },
+                "example": {
+                  "id": "05098db0-e734-44d3-8488-83dc22da516d",
+                  "referralId": "9NW6FHGL",
+                  "email": "diney.bomfim@multibankfx.com",
+                  "createdDate": 1753189249144,
+                  "hasKycToImport": true,
+                  "userProfile": {
+                    "id": 368376,
+                    "firstName": "diney",
+                    "lastName": "test",
+                    "phoneNumber": "51412411242",
+                    "phoneCountry": "AE",
+                    "country": "SG",
+                    "nationality": "SG"
+                  },
+                  "phoneConfirmed": true,
+                  "emailConfirmed": true,
+                  "external": false,
+                  "leadSource": null,
+                  "kycLevel": "ID_VERIFIED_POR_VERIFIED",
+                  "userSettings": {
+                    "languageCode": "en",
+                    "currency": "USD"
+                  },
+                  "userAccountInfo": {
+                    "sumsubStatus": 2,
+                    "sumsubStatusLabel": "PENDING",
+                    "whiteLabel": "asic_io",
+                    "accId": 683291,
+                    "suitabilityTest": {
+                      "id": "3",
+                      "title": "Pending Product Knowledge Test"
+                    },
+                    "kycRiskProfile": 2,
+                    "kycRiskProfileLabel": "High",
+                    "testStrategyInfo": null
+                  },
+                  "migrated": false,
+                  "kycTier": 2,
+                  "regulationUserType": "asic_io_tier_one",
+                  "ioDerivatives": null,
+                  "isTestAccount": false,
+                  "isUserForbidden": false
                 }
               }
             }
@@ -873,6 +972,41 @@
         }
       }
     },
+    "/api/v1/user/cards/{cardId}": {
+      "delete": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Delete Saved Card",
+        "operationId": "deleteSavedCard",
+        "description": "Deletes a saved card by card id.",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/io/v1/user/devices": {
       "get": {
         "tags": [
@@ -1061,60 +1195,6 @@
                   "push": {
                     "transactional": true,
                     "priceAlert": true
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Standard error response (MBIO 2.0)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "User"
-        ],
-        "summary": "Verify Passkey Creation",
-        "operationId": "verifyPasskeyCreation",
-        "description": "Confirms creation of a new passkey (contract path).",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyPasskeyCreationRequest"
-              },
-              "example": {
-                "name": "iPhone 15 Pro",
-                "platform": "iOS",
-                "credentialId": "l3u5K8zV2w7Y1Z0Qp9f3XQ",
-                "assertion": {
-                  "clientData": "eyJ0eXBl...",
-                  "authenticatorData": "SZYN5...",
-                  "signature": "MEYCIQ...",
-                  "userId": "dXNlcl8xMjM0NTY"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Passkey"
                   }
                 }
               }
@@ -1579,6 +1659,60 @@
                     "lastUsedAt": 12334566
                   }
                 ]
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Verify Passkey Creation",
+        "operationId": "verifyPasskeyCreation",
+        "description": "Confirms the creation of a new passkey and returns the updated passkeys list.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPasskeyCreationRequest"
+              },
+              "example": {
+                "name": "iPhone 15 Pro",
+                "platform": "iOS",
+                "credentialId": "l3u5K8zV2w7Y1Z0Qp9f3XQ",
+                "assertion": {
+                  "clientData": "eyJ0eXBl...",
+                  "authenticatorData": "SZYN5...",
+                  "signature": "MEYCIQ...",
+                  "userId": "dXNlcl8xMjM0NTY"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Passkey"
+                  }
+                }
               }
             }
           },
@@ -5102,6 +5236,110 @@
         }
       }
     },
+    "/api/io/v1/wallet/transfer": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Create Transfer",
+        "operationId": "createTransfer",
+        "description": "Executes a transfer order between accounts (e.g. spot to derivatives or spot to RWA).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransferRequest"
+              },
+              "examples": {
+                "derivatives": {
+                  "summary": "Spot to derivatives",
+                  "value": {
+                    "quotationId": "abc123def",
+                    "type": "transfer",
+                    "orderType": "onChain",
+                    "metadata": {
+                      "transferFrom": "spot",
+                      "transferTo": "derivatives"
+                    }
+                  }
+                },
+                "rwa": {
+                  "summary": "Spot to RWA",
+                  "value": {
+                    "quotationId": "abc123def",
+                    "type": "transfer",
+                    "orderType": "onChain",
+                    "metadata": {
+                      "transferFrom": "spot",
+                      "transferTo": "rwa"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletOrder"
+                },
+                "example": {
+                  "id": "9efab4a8-a638-46ce-94c0-35f3ae806bec",
+                  "status": "pending",
+                  "type": "deposit",
+                  "orderType": "market",
+                  "base": "BTC",
+                  "quote": "USD",
+                  "rate": 50000,
+                  "baseAmount": 0.5,
+                  "baseAmountFormatted": "0.51012453",
+                  "quoteAmount": 25000,
+                  "quoteAmountFormatted": "25,000.00",
+                  "feeValues": {
+                    "base": {
+                      "value": 123123.0,
+                      "formatted": "123,000.00"
+                    },
+                    "quote": {
+                      "value": 123123.0,
+                      "formatted": "123,000.00"
+                    }
+                  },
+                  "startTime": 16963200,
+                  "endTime": 16963236,
+                  "recordId": 12345
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Async response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderAsyncResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/io/v1/wallet/transactions": {
       "get": {
         "tags": [
@@ -7875,6 +8113,43 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Acknowledge Referral",
+        "operationId": "acknowledgeReferral",
+        "description": "Acknowledges a referral member as read. Use memberId \"all\" to mark all as read. Fire and forget.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralAckRequest"
+              },
+              "example": {
+                "memberId": "abc123",
+                "isRead": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response - fire and forget"
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/io/v1/referral/validate": {
@@ -8117,6 +8392,189 @@
                   "referralCode": "KRAU_GBP2G",
                   "email": "krause.scarlet@multibank.io",
                   "url": "https://trade.mb.io/ref/KRAU_GBP2G"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Acknowledge Affiliate",
+        "operationId": "acknowledgeAffiliate",
+        "description": "Acknowledges an affiliate member as read. Use memberId \"all\" to mark all as read. Fire and forget.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralAckRequest"
+              },
+              "example": {
+                "memberId": "abc123",
+                "isRead": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response - fire and forget"
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/io/v1/affiliate/onboarding": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Affiliate Onboarding",
+        "operationId": "getAffiliateOnboarding",
+        "description": "Returns the affiliate onboarding questionnaire and the user's current status.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateOnboarding"
+                },
+                "example": {
+                  "status": "none",
+                  "info": {
+                    "maxMembersBeforeUpgrade": 10,
+                    "commissionRate": 0.1
+                  },
+                  "options": [
+                    {
+                      "id": "retail",
+                      "title": "Retail",
+                      "message": "For individual users referring traders through their personal network."
+                    },
+                    {
+                      "id": "institutional",
+                      "title": "Institutional",
+                      "message": "For businesses, creators, trading communities, media platforms, and institutional partners.",
+                      "fields": [
+                        {
+                          "id": "commissionRate",
+                          "type": "list",
+                          "placeholder": "Requested commission range",
+                          "options": [
+                            {
+                              "id": "xxsmall",
+                              "text": "10%-15%"
+                            },
+                            {
+                              "id": "large",
+                              "text": "30%+"
+                            }
+                          ],
+                          "required": true
+                        },
+                        {
+                          "id": "website",
+                          "type": "text",
+                          "label": "Website (Optional)",
+                          "placeholder": "https://website.com",
+                          "required": false
+                        }
+                      ]
+                    }
+                  ],
+                  "rejectionMessage": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error response (MBIO 2.0)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Submit Affiliate Onboarding",
+        "operationId": "submitAffiliateOnboarding",
+        "description": "Submits affiliate onboarding answers.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AffiliateOnboardingSubmitRequest"
+              },
+              "example": {
+                "optionId": "institutional",
+                "answers": [
+                  {
+                    "id": "commissionRate",
+                    "value": "xsmall"
+                  },
+                  {
+                    "id": "description",
+                    "value": "kol"
+                  },
+                  {
+                    "id": "audienceSize",
+                    "value": "large"
+                  },
+                  {
+                    "id": "expectedReferrals",
+                    "value": "medium"
+                  },
+                  {
+                    "id": "website",
+                    "value": "https://alphasignals.io"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateOnboardingResult"
+                },
+                "example": {
+                  "id": "ref_id123456",
+                  "status": "submitted"
                 }
               }
             }
@@ -8489,7 +8947,8 @@
           "type": {
             "type": "string",
             "enum": [
-              "public-key"
+              "public-key",
+              "password"
             ]
           }
         }
@@ -8538,6 +8997,159 @@
           "referralCode": {
             "type": "string",
             "example": "L4KJ56"
+          }
+        }
+      },
+      "UserProfileDetails": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 368376
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "phoneCountry": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          }
+        }
+      },
+      "UserSettings": {
+        "type": "object",
+        "properties": {
+          "languageCode": {
+            "type": "string",
+            "example": "en"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          }
+        }
+      },
+      "UserAccountInfoSuitabilityTest": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "UserAccountInfo": {
+        "type": "object",
+        "properties": {
+          "sumsubStatus": {
+            "type": "integer"
+          },
+          "sumsubStatusLabel": {
+            "type": "string"
+          },
+          "whiteLabel": {
+            "type": "string"
+          },
+          "accId": {
+            "type": "integer"
+          },
+          "suitabilityTest": {
+            "$ref": "#/components/schemas/UserAccountInfoSuitabilityTest"
+          },
+          "kycRiskProfile": {
+            "type": "integer"
+          },
+          "kycRiskProfileLabel": {
+            "type": "string"
+          },
+          "testStrategyInfo": {
+            "nullable": true
+          }
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "05098db0-e734-44d3-8488-83dc22da516d"
+          },
+          "referralId": {
+            "type": "string",
+            "example": "9NW6FHGL"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "createdDate": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix epoch in milliseconds.",
+            "example": 1753189249144
+          },
+          "hasKycToImport": {
+            "type": "boolean",
+            "description": "True when the user has cross-platform KYC to import."
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/UserProfileDetails"
+          },
+          "phoneConfirmed": {
+            "type": "boolean"
+          },
+          "emailConfirmed": {
+            "type": "boolean"
+          },
+          "external": {
+            "type": "boolean"
+          },
+          "leadSource": {
+            "type": "string",
+            "nullable": true
+          },
+          "kycLevel": {
+            "type": "string",
+            "example": "ID_VERIFIED_POR_VERIFIED"
+          },
+          "userSettings": {
+            "$ref": "#/components/schemas/UserSettings"
+          },
+          "userAccountInfo": {
+            "$ref": "#/components/schemas/UserAccountInfo"
+          },
+          "migrated": {
+            "type": "boolean"
+          },
+          "kycTier": {
+            "type": "integer"
+          },
+          "regulationUserType": {
+            "type": "string",
+            "example": "asic_io_tier_one"
+          },
+          "ioDerivatives": {
+            "nullable": true
+          },
+          "isTestAccount": {
+            "type": "boolean"
+          },
+          "isUserForbidden": {
+            "type": "boolean"
           }
         }
       },
@@ -11992,6 +12604,44 @@
           "otp"
         ]
       },
+      "TransferMetadata": {
+        "type": "object",
+        "properties": {
+          "transferFrom": {
+            "type": "string",
+            "example": "spot"
+          },
+          "transferTo": {
+            "type": "string",
+            "example": "derivatives"
+          }
+        }
+      },
+      "CreateTransferRequest": {
+        "type": "object",
+        "properties": {
+          "quotationId": {
+            "type": "string",
+            "example": "abc123def"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "transfer"
+            ]
+          },
+          "orderType": {
+            "type": "string",
+            "example": "onChain"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/TransferMetadata"
+          }
+        },
+        "required": [
+          "quotationId"
+        ]
+      },
       "WalletOrder": {
         "type": "object",
         "properties": {
@@ -13720,6 +14370,184 @@
           "isValid": {
             "type": "boolean",
             "example": true
+          }
+        }
+      },
+      "ReferralAckRequest": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "Member id, or \"all\" to acknowledge all.",
+            "example": "abc123"
+          },
+          "isRead": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "memberId",
+          "isRead"
+        ]
+      },
+      "AffiliateOnboardingInfo": {
+        "type": "object",
+        "properties": {
+          "maxMembersBeforeUpgrade": {
+            "type": "integer",
+            "example": 10
+          },
+          "commissionRate": {
+            "type": "number",
+            "description": "Fractional percentage [0-1].",
+            "example": 0.1
+          }
+        }
+      },
+      "AffiliateOnboardingFieldOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "AffiliateOnboardingField": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "title",
+              "list",
+              "radio",
+              "text"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "placeholder": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AffiliateOnboardingFieldOption"
+            }
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AffiliateOnboardingOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "retail",
+              "institutional"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AffiliateOnboardingField"
+            }
+          }
+        }
+      },
+      "AffiliateOnboarding": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "submitted",
+              "rejected",
+              "retail",
+              "institutional"
+            ]
+          },
+          "info": {
+            "$ref": "#/components/schemas/AffiliateOnboardingInfo"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AffiliateOnboardingOption"
+            }
+          },
+          "rejectionMessage": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AffiliateOnboardingAnswer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "AffiliateOnboardingSubmitRequest": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "enum": [
+              "retail",
+              "institutional"
+            ]
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AffiliateOnboardingAnswer"
+            }
+          }
+        },
+        "required": [
+          "optionId"
+        ]
+      },
+      "AffiliateOnboardingResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ref_id123456"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "submitted",
+              "rejected",
+              "retail",
+              "institutional"
+            ]
           }
         }
       }
