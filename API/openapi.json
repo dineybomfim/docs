@@ -3,7 +3,7 @@
   "info": {
     "title": "Multibank CREST + MBIO API",
     "version": "2.0.0",
-    "description": "Dual-product client contract.\n\n- **Brokerage (CREST / MEX):** `/api/v1/...` via Heimdall + IAM + crest-refdata + notifications; plus mobile-static hosts for content/geoip/countries/calendar/banners and localization.{domain}.\n- **Exchange (MBIO):** `/api/io/v1/...` (and `/api/io/v2/...` widgets). Funding uses **portfolio** (not legacy wallet).\n\n### Contract extensions\n- `x-mb-product`: `brokerage` | `exchange` | `shared` | `mobile-static`\n- `x-mb-status`: `implemented` | `planned` | `wip`\n"
+    "description": "Dual-product client contract.\n\n- **Brokerage (CREST / MEX):** `/api/v1/...` via Heimdall + IAM + crest-refdata + notifications; plus mobile-static hosts for content/geoip/countries/calendar/banners and localization.{domain}.\n- **Exchange (MBIO):** `/api/io/v1/...` (and `/api/io/v2/...` widgets). Funding uses **portfolio** (not legacy wallet).\n\n### Contract extensions\n- `x-mb-product`: `brokerage` | `exchange` | `shared` | `mobile-static`\n- `x-mb-status`: `implemented` | `planned` | `wip`\n\n### Brokerage headers\n- `x-broker-id`: MT5 trading account token/login (e.g. `1234ABCD`)\n- `x-broker-type`: `demo` | `real` | `introducingBroker` (selected MT5 account type)\nRequired on brokerage trade calls; sent on all authenticated brokerage app requests.\n"
   },
   "servers": [
     {
@@ -2035,6 +2035,16 @@
             }
           },
           {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Optional market category filter used by explore news widgets (forex, stocks, indices, commodities, crypto).",
+            "schema": {
+              "type": "string",
+              "example": "forex"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -2050,6 +2060,15 @@
             "schema": {
               "type": "integer",
               "example": 10
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor pagination token (news item id). When present, results start at that item.",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -7916,412 +7935,6 @@
         "x-mb-status": "implemented"
       }
     },
-    "/api/v1/trade/order": {
-      "post": {
-        "tags": [
-          "Trade"
-        ],
-        "summary": "Place Order (CFD)",
-        "operationId": "placeCfdOrder",
-        "description": "Places a new CFD order via CREST Heimdall (`/api/v1/trade/order`).",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CfdPlaceOrderRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CfdTradeIdResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CfdTradeIdResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        },
-        "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
-      }
-    },
-    "/api/v1/trade/order/{order_id}": {
-      "put": {
-        "tags": [
-          "Trade"
-        ],
-        "summary": "Edit Order (CFD)",
-        "operationId": "editCfdOrder",
-        "description": "Edit a previously created CFD order.",
-        "parameters": [
-          {
-            "name": "order_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CfdEditOrderRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CfdTradeIdResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        },
-        "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
-      },
-      "delete": {
-        "tags": [
-          "Trade"
-        ],
-        "summary": "Cancel Order (CFD)",
-        "operationId": "cancelCfdOrder",
-        "description": "Cancel a previously created CFD order.",
-        "parameters": [
-          {
-            "name": "order_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CfdCancelOrderRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Cancelled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        },
-        "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
-      }
-    },
-    "/api/v1/trade/position/{position_id}": {
-      "put": {
-        "tags": [
-          "Trade"
-        ],
-        "summary": "Edit Position (CFD)",
-        "operationId": "editCfdPosition",
-        "description": "Edit SL/TP on an open CFD position.",
-        "parameters": [
-          {
-            "name": "position_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CfdEditPositionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CfdTradeIdResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        },
-        "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
-      },
-      "post": {
-        "tags": [
-          "Trade"
-        ],
-        "summary": "Close Position (CFD)",
-        "operationId": "closeCfdPosition",
-        "description": "Close (full/partial) an open CFD position.",
-        "parameters": [
-          {
-            "name": "position_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CfdClosePositionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CfdTradeIdResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Client/server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardError"
-                }
-              }
-            }
-          }
-        },
-        "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
-      }
-    },
     "/api/io/v1/portfolio/{accountId}/deposit": {
       "get": {
         "tags": [
@@ -10544,9 +10157,16 @@
                 },
                 "example": {
                   "push": {
+                    "account": true,
                     "transactional": true,
-                    "priceAlert": true
-                  }
+                    "tradingActivity": true,
+                    "risk": true,
+                    "priceAlert": true,
+                    "system": true,
+                    "marketing": true
+                  },
+                  "sms": {},
+                  "email": {}
                 }
               }
             }
@@ -10581,9 +10201,16 @@
               },
               "example": {
                 "push": {
+                  "account": true,
                   "transactional": true,
-                  "priceAlert": true
-                }
+                  "tradingActivity": true,
+                  "risk": true,
+                  "priceAlert": true,
+                  "system": true,
+                  "marketing": true
+                },
+                "sms": {},
+                "email": {}
               }
             }
           }
@@ -10598,9 +10225,16 @@
                 },
                 "example": {
                   "push": {
+                    "account": true,
                     "transactional": true,
-                    "priceAlert": true
-                  }
+                    "tradingActivity": true,
+                    "risk": true,
+                    "priceAlert": true,
+                    "system": true,
+                    "marketing": true
+                  },
+                  "sms": {},
+                  "email": {}
                 }
               }
             }
@@ -11120,7 +10754,7 @@
         ],
         "summary": "Update Price Alert (Brokerage)",
         "operationId": "brokerageUpdatePriceAlert",
-        "description": "Brokerage CREST IAM twin of `/api/io/v1/user/alerts/{alertId}`.\n\nMutes or unmutes a previously created price alert.",
+        "description": "Mutes or unmutes a price alert. Use alertId=all with body.ids for bulk isMuted only.",
         "parameters": [
           {
             "name": "alertId",
@@ -11128,7 +10762,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Alert id, 'all', or comma-separated (legacy). Bulk prefers body.ids with alertId=all."
           }
         ],
         "requestBody": {
@@ -11181,7 +10816,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Alert id, comma-separated ids, or 'all'"
+            "description": "Alert id, 'all', or comma-separated (legacy). Bulk prefers body.ids with alertId=all."
           }
         ],
         "responses": {
@@ -11239,7 +10874,23 @@
           }
         },
         "x-mb-product": "brokerage",
-        "x-mb-status": "implemented"
+        "x-mb-status": "implemented",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceAlertBulkIdsRequest"
+              },
+              "example": {
+                "ids": [
+                  "1234",
+                  "64464"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/user/notifications/{notificationId}": {
@@ -11420,6 +11071,573 @@
           }
         }
       }
+    },
+    "/api/v1/trade/{account_id}/order": {
+      "post": {
+        "tags": [
+          "Trade"
+        ],
+        "summary": "Place Order (CFD)",
+        "operationId": "placeCfdOrder",
+        "description": "Places a new CFD order. Omit stopLoss/takeProfit when not set. unit/trailingUnit conversions are server-side. timeInForce+expireTimeSec only for limit|stop|stopLimit.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-broker-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1234"
+            },
+            "description": "MT5 trading account token/login"
+          },
+          {
+            "name": "x-broker-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "demo",
+                "real",
+                "introducingBroker"
+              ],
+              "example": "real"
+            },
+            "description": "Type of the selected MT5 account (TradingAccount.AccountType)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfdPlaceOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfdTradeIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        },
+        "x-mb-product": "brokerage",
+        "x-mb-status": "implemented"
+      }
+    },
+    "/api/v1/trade/{account_id}/order/{order_id}": {
+      "put": {
+        "tags": [
+          "Trade"
+        ],
+        "summary": "Edit Order (CFD)",
+        "operationId": "editCfdOrder",
+        "description": "Edit a pending CFD order. Full replace — send complete intended state.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Order ticket, or 'all' for bulk cancel"
+          },
+          {
+            "name": "x-broker-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1234"
+            },
+            "description": "MT5 trading account token/login"
+          },
+          {
+            "name": "x-broker-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "demo",
+                "real",
+                "introducingBroker"
+              ],
+              "example": "real"
+            },
+            "description": "Type of the selected MT5 account (TradingAccount.AccountType)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfdEditOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfdTradeIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        },
+        "x-mb-product": "brokerage",
+        "x-mb-status": "implemented"
+      },
+      "delete": {
+        "tags": [
+          "Trade"
+        ],
+        "summary": "Cancel Order (CFD)",
+        "operationId": "cancelCfdOrder",
+        "description": "Cancel a pending CFD order. Use order_id=all with body.ids for bulk.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Order ticket, or 'all' for bulk cancel"
+          },
+          {
+            "name": "x-broker-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1234"
+            },
+            "description": "MT5 trading account token/login"
+          },
+          {
+            "name": "x-broker-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "demo",
+                "real",
+                "introducingBroker"
+              ],
+              "example": "real"
+            },
+            "description": "Type of the selected MT5 account (TradingAccount.AccountType)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfdCancelOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        },
+        "x-mb-product": "brokerage",
+        "x-mb-status": "implemented"
+      }
+    },
+    "/api/v1/trade/{account_id}/position/{position_id}": {
+      "put": {
+        "tags": [
+          "Trade"
+        ],
+        "summary": "Edit Position (CFD)",
+        "operationId": "editCfdPosition",
+        "description": "Edit SL/TP on an open CFD position. Omit stopLoss or takeProfit to remove that level.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Position ticket, or 'all' for bulk close"
+          },
+          {
+            "name": "x-broker-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1234"
+            },
+            "description": "MT5 trading account token/login"
+          },
+          {
+            "name": "x-broker-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "demo",
+                "real",
+                "introducingBroker"
+              ],
+              "example": "real"
+            },
+            "description": "Type of the selected MT5 account (TradingAccount.AccountType)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfdEditPositionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfdTradeIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        },
+        "x-mb-product": "brokerage",
+        "x-mb-status": "implemented"
+      },
+      "delete": {
+        "tags": [
+          "Trade"
+        ],
+        "summary": "Close Position (CFD)",
+        "operationId": "closeCfdPosition",
+        "description": "Close (full/partial) an open CFD position. Use position_id=all with body.ids for bulk full close only.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Position ticket, or 'all' for bulk close"
+          },
+          {
+            "name": "x-broker-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1234"
+            },
+            "description": "MT5 trading account token/login"
+          },
+          {
+            "name": "x-broker-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "demo",
+                "real",
+                "introducingBroker"
+              ],
+              "example": "real"
+            },
+            "description": "Type of the selected MT5 account (TradingAccount.AccountType)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfdClosePositionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Client/server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardError"
+                }
+              }
+            }
+          }
+        },
+        "x-mb-product": "brokerage",
+        "x-mb-status": "implemented"
+      }
     }
   },
   "components": {
@@ -11428,6 +11646,18 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "brokerId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-broker-id",
+        "description": "MT5 trading account token/login (e.g. 1234ABCD)."
+      },
+      "brokerType": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-broker-type",
+        "description": "Selected MT5 account type: demo | real | introducingBroker."
       }
     },
     "schemas": {
@@ -12130,15 +12360,43 @@
           "push": {
             "type": "object",
             "properties": {
+              "account": {
+                "type": "boolean",
+                "example": true
+              },
               "transactional": {
+                "type": "boolean",
+                "example": true
+              },
+              "tradingActivity": {
+                "type": "boolean",
+                "example": true
+              },
+              "risk": {
                 "type": "boolean",
                 "example": true
               },
               "priceAlert": {
                 "type": "boolean",
                 "example": true
+              },
+              "system": {
+                "type": "boolean",
+                "example": true
+              },
+              "marketing": {
+                "type": "boolean",
+                "example": true
               }
             }
+          },
+          "sms": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "email": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       },
@@ -12174,7 +12432,8 @@
           },
           "appId": {
             "type": "string",
-            "example": "com.mexdigital.app"
+            "example": "com.mexdigital.app",
+            "description": "com.mexdigital.app | com.mexdigital.app.dev | com.multibank.cfd | com.multibank.cfd.dev"
           }
         }
       },
@@ -12312,6 +12571,13 @@
           "isMuted": {
             "type": "boolean",
             "example": true
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Bulk mute/unmute when path alert_id=all"
           }
         }
       },
@@ -12351,6 +12617,15 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/NotificationMetadata"
+          },
+          "cta": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "example": "https://trade.mb.io/travel-rule/{transactionId}"
+              }
+            }
           }
         }
       },
@@ -12680,6 +12955,13 @@
           "date": {
             "type": "integer",
             "example": 1760272313
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["crypto", "stocks"]
           }
         }
       },
@@ -13752,7 +14034,13 @@
               "tab",
               "list",
               "carousel",
-              "multiLevel"
+              "multiLevel",
+              "segmented",
+              "grid",
+              "tile",
+              "recentlyViewed",
+              "watchlist",
+              "news"
             ]
           },
           "imageUrl": {
@@ -17956,7 +18244,6 @@
         "type": "object",
         "required": [
           "nonce",
-          "accountId",
           "side",
           "orderType",
           "symbol",
@@ -17967,9 +18254,6 @@
             "type": "string",
             "description": "UUID alphanumeric trimmed to 23 with platform prefix i|a"
           },
-          "accountId": {
-            "type": "string"
-          },
           "side": {
             "type": "string",
             "enum": [
@@ -17987,19 +18271,31 @@
             ]
           },
           "orderPrice": {
-            "type": "number"
+            "type": "number",
+            "description": "Required for limit | stop | stopLimit"
           },
           "symbol": {
             "type": "string"
           },
+          "input": {
+            "type": "string",
+            "enum": [
+              "lots",
+              "value"
+            ]
+          },
           "amount": {
+            "type": "number",
+            "description": "User-typed amount (lots or value per input)"
+          },
+          "lots": {
             "type": "number"
           },
           "stopLoss": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdStopLoss"
           },
           "takeProfit": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdTakeProfit"
           },
           "timeInForce": {
             "type": "string",
@@ -18007,29 +18303,24 @@
               "DAY",
               "GTC",
               "GTD"
-            ]
+            ],
+            "description": "Pending only; default GTC. Not used for market."
           },
           "expireTimeSec": {
-            "type": "integer"
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
+            "type": "integer",
+            "description": "Pending only. 0 for GTC/DAY; Unix UTC seconds for GTD"
           }
         }
       },
       "CfdEditOrderRequest": {
         "type": "object",
         "required": [
-          "accountId",
           "side",
           "orderType",
           "symbol"
         ],
+        "description": "Full replace matching GET. Omit SL/TP clears on MT5.",
         "properties": {
-          "accountId": {
-            "type": "string"
-          },
           "side": {
             "type": "string",
             "enum": [
@@ -18046,17 +18337,24 @@
               "stopLimit"
             ]
           },
-          "orderPrice": {
-            "type": "number"
-          },
           "symbol": {
             "type": "string"
           },
-          "stopLoss": {
+          "orderPrice": {
             "type": "number"
           },
+          "input": {
+            "type": "string",
+            "enum": [
+              "lots",
+              "value"
+            ]
+          },
+          "stopLoss": {
+            "$ref": "#/components/schemas/CfdStopLoss"
+          },
           "takeProfit": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdTakeProfit"
           },
           "timeInForce": {
             "type": "string",
@@ -18073,16 +18371,8 @@
       },
       "CfdCancelOrderRequest": {
         "type": "object",
-        "required": [
-          "accountId",
-          "side",
-          "orderType",
-          "symbol"
-        ],
+        "description": "Single cancel: send order fields. Bulk: send ids (path order_id=all).",
         "properties": {
-          "accountId": {
-            "type": "string"
-          },
           "side": {
             "type": "string",
             "enum": [
@@ -18101,60 +18391,99 @@
           },
           "symbol": {
             "type": "string"
+          },
+          "orderPrice": {
+            "type": "number"
+          },
+          "input": {
+            "type": "string",
+            "enum": [
+              "lots",
+              "value"
+            ]
+          },
+          "stopLoss": {
+            "$ref": "#/components/schemas/CfdStopLoss"
+          },
+          "takeProfit": {
+            "$ref": "#/components/schemas/CfdTakeProfit"
+          },
+          "timeInForce": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "GTC",
+              "GTD"
+            ]
+          },
+          "expireTimeSec": {
+            "type": "integer"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
       "CfdEditPositionRequest": {
         "type": "object",
         "required": [
-          "accountId",
           "symbol"
         ],
+        "description": "Omit stopLoss or takeProfit to clear that level on MT5 (full replace).",
         "properties": {
-          "accountId": {
-            "type": "string"
-          },
           "symbol": {
             "type": "string"
           },
           "stopLoss": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdStopLoss"
           },
           "takeProfit": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdTakeProfit"
           }
         }
       },
       "CfdClosePositionRequest": {
         "type": "object",
-        "required": [
-          "accountId",
-          "side",
-          "symbol",
-          "amount"
-        ],
+        "description": "Single close: side/symbol/amount. Bulk: ids (path position_id=all); multi = full close only.",
         "properties": {
-          "accountId": {
-            "type": "string"
-          },
           "side": {
             "type": "string",
             "enum": [
               "buy",
               "sell"
-            ]
+            ],
+            "description": "Closing side (opposite of open position)"
           },
           "symbol": {
             "type": "string"
           },
+          "input": {
+            "type": "string",
+            "enum": [
+              "lots",
+              "value"
+            ]
+          },
           "amount": {
             "type": "number"
           },
-          "stopLoss": {
+          "lots": {
             "type": "number"
           },
+          "stopLoss": {
+            "$ref": "#/components/schemas/CfdStopLoss"
+          },
           "takeProfit": {
-            "type": "number"
+            "$ref": "#/components/schemas/CfdTakeProfit"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -18336,6 +18665,97 @@
               }
             }
           ]
+        }
+      },
+      "CfdStopLoss": {
+        "type": "object",
+        "description": "Omit when not set. unit/trailingUnit converted server-side to absolute PriceSL. Trailing is middle-layer.",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "trailing"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "targetPrice",
+              "percentage",
+              "value",
+              "pips"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "triggerPrice": {
+            "type": "number"
+          },
+          "trailingDistance": {
+            "type": "number"
+          },
+          "trailingStep": {
+            "type": "number"
+          },
+          "trailingUnit": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "pips"
+            ]
+          }
+        }
+      },
+      "CfdTakeProfit": {
+        "type": "object",
+        "description": "Omit when not set. unit converted server-side to absolute PriceTP.",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "targetPrice",
+              "percentage",
+              "value",
+              "pips"
+            ]
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "unit",
+          "value"
+        ]
+      },
+      "CfdBulkIdsRequest": {
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PriceAlertBulkIdsRequest": {
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     }
